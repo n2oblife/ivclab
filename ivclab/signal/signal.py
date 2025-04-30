@@ -11,8 +11,10 @@ def downsample(image):
     returns 
         downsampled_image: np.array of shape [H // 2, W // 2, C]
     """
-    downsampled_image = image[0::2, 0::2, :]
-    return downsampled_image
+    if image.ndim == 3:
+        return image[0::2, 0::2, :]
+    if image.ndim == 2:
+        return image[0::2, 0::2]
 
 def upsample(image):
     """
@@ -23,9 +25,14 @@ def upsample(image):
     returns 
         upsampled_image: np.array of shape [H * 2, W * 2, C]
     """
-    H, W, C = image.shape
-    upsampled_image = np.zeros((2 * H, 2 * W, C), dtype=image.dtype)
-    upsampled_image[0::2, 0::2, :] = image
+    if image.ndim == 3:
+        H, W, C = image.shape
+        upsampled_image = np.zeros((2 * H, 2 * W, C), dtype=image.dtype)
+        upsampled_image[0::2, 0::2, :] = image
+    elif image.ndim == 2:
+        H, W = image.shape
+        upsampled_image = np.zeros((2 * H, 2 * W), dtype=image.dtype)
+        upsampled_image[0::2, 0::2] = image
     return upsampled_image
 
 def lowpass_filter(image, kernel):
@@ -42,8 +49,8 @@ def lowpass_filter(image, kernel):
     filtered = np.zeros_like(image)
 
     # YOUR CODE STARTS HERE
-    
-
+    kernel /= np.sum(kernel) # Normalize the kernel
+    filtered = convolve2d(image, kernel, mode='same', boundary='symm')    
     # YOUR CODE ENDS HERE
     return filtered
 
@@ -68,14 +75,9 @@ class FilterPipeline:
             output_image: np.array of shape [H, W, C]
         """
         # Cast image to floating point
-        image = image * 1.0
+        output = image * 1.0
 
         # YOUR CODE STARTS HERE
-
-
-
-
-
 
 
         #YOUR CODE ENDS HERE

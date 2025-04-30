@@ -1,4 +1,4 @@
-from ivclab.utils import imread, imshow, calc_psnr
+from ivclab.utils import imread, imshow, calc_mse, calc_psnr
 import matplotlib.pyplot as plt
 
 # read images
@@ -10,8 +10,8 @@ img_monarch_compressed = imread('data/monarch_compressed.tif')
 # YOUR CODE STARTS HERE
 
 # Compute the PSNR values for Lena and Monarch compression
-psnr_lena = ...
-psnr_monarch = ...
+psnr_lena = calc_psnr(orig=img_lena, rec=img_lena_compressed)
+psnr_monarch = calc_psnr(orig=img_monarch, rec=img_monarch_compressed)
 
 # YOUR CODE ENDS HERE
 

@@ -4,7 +4,11 @@ import numpy as np
 
 image = imread('data/satpic1.bmp')
 
-lowpass_kernel = ...
+lowpass_kernel = np.asarray(
+    [[1,2,1],
+     [2,4,2],
+     [1,2,1]]
+)
 pipeline = FilterPipeline(kernel=lowpass_kernel)
 
 recon_image_not_pre = pipeline.filter_img(image, False)

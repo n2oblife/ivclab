@@ -30,3 +30,6 @@ python -m unittest -v tests/ch1.py
 python exercises/ch1/ex1.py
 ```
 
+## Download data
+
+Click [here](https://www.moodle.tum.de/mod/resource/view.php?id=3367764) to download the necessary data.
