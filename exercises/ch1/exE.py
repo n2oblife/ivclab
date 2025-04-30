@@ -149,7 +149,6 @@ def codec(img: np.ndarray, kernel: np.ndarray, show=False):
     return filtered, down_img, up_img
 
 
-
 if __name__ == "__main__":
     img = imread("data/satpic1.bmp")
     
