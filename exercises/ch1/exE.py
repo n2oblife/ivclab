@@ -76,8 +76,7 @@ def plot_differences(img: np.ndarray, filtered: np.ndarray, show=False):
         plt.tight_layout()
         plt.show()
 
-
-def interpolation_upsample(image: np.ndarray) -> np.ndarray:
+def interpolation_upsample(image: np.ndarray, classic=False) -> np.ndarray:
     """
     Upsamples an image by a factor of 2 using bilinear interpolation.
     
@@ -91,9 +90,110 @@ def interpolation_upsample(image: np.ndarray) -> np.ndarray:
         return np.stack([
             zoom(image[:, :, c], 2, order=1)  # order=1 -> bilinear interpolation
             for c in range(image.shape[2])
-        ], axis=2)
+        ], axis=2) if not classic else upsample(image)
     else:  # Grayscale
         return zoom(image, 2, order=1)
+
+def subsampling(img: np.ndarray, show=False):
+    """Applies filtering, downsampling, and upsampling to the image."""
+    down_img = downsample(img)
+    up_img = interpolation_upsample(down_img)
+    
+    # Normalize images to the correct range for visualization:
+    if img.dtype in [np.float32, np.float64]:
+        # Normalize to [0, 1] for floats
+        img = np.clip(img, 0, 1).astype(np.float32)
+        down_img = np.clip(down_img, 0, 1).astype(np.float32)
+        up_img = np.clip(up_img, 0, 1).astype(np.float32)
+    elif img.dtype == np.uint8:
+        # Stay in [0, 255] for uint8
+        img = np.clip(img, 0, 255).astype(np.uint8)
+        down_img = np.clip(down_img, 0, 255).astype(np.uint8)
+        up_img = np.clip(up_img, 0, 255).astype(np.uint8)
+    else:
+        # Convert everything to float [0,1] just in case
+        img = np.clip(img / 255.0, 0, 1).astype(np.float32)
+        down_img = np.clip(down_img / 255.0, 0, 1).astype(np.float32)
+        up_img = np.clip(up_img / 255.0, 0, 1).astype(np.float32)
+
+    
+    if show:
+        plt.figure(figsize=(12, 6))
+
+        plt.subplot(1, 3, 1)
+        plt.title("Original")
+        plt.imshow(img, cmap='gray' if img.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.subplot(1, 3, 2)
+        plt.title("Downsampled")
+        plt.imshow(down_img, cmap='gray' if down_img.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.subplot(1, 3, 3)
+        plt.title("Upsampled")
+        plt.imshow(up_img, cmap='gray' if up_img.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.tight_layout()
+        plt.show()
+
+    return down_img, up_img
+
+def subsampling_postfiltering(img: np.ndarray, kernel:np.ndarray, show=False):
+    """Applies filtering, downsampling, and upsampling to the image."""
+    down_img = downsample(img)
+    up_img = interpolation_upsample(down_img)
+    postfiltered = conv_filter(up_img, kernel)  # postfiltering
+    
+    # Normalize images to the correct range for visualization:
+    if img.dtype in [np.float32, np.float64]:
+        # Normalize to [0, 1] for floats
+        img = np.clip(img, 0, 1).astype(np.float32)
+        down_img = np.clip(down_img, 0, 1).astype(np.float32)
+        up_img = np.clip(up_img, 0, 1).astype(np.float32)
+        postfiltered = np.clip(postfiltered, 0, 1).astype(np.float32)
+    elif img.dtype == np.uint8:
+        # Stay in [0, 255] for uint8
+        img = np.clip(img, 0, 255).astype(np.uint8)
+        down_img = np.clip(down_img, 0, 255).astype(np.uint8)
+        up_img = np.clip(up_img, 0, 255).astype(np.uint8)
+        postfiltered = np.clip(postfiltered, 0, 255).astype(np.uint8)
+    else:
+        # Convert everything to float [0,1] just in case
+        img = np.clip(img / 255.0, 0, 1).astype(np.float32)
+        down_img = np.clip(down_img / 255.0, 0, 1).astype(np.float32)
+        up_img = np.clip(up_img / 255.0, 0, 1).astype(np.float32)
+        postfiltered = np.clip(postfiltered / 255.0, 0, 1).astype(np.float32)
+
+    
+    if show:
+        plt.figure(figsize=(12, 6))
+
+        plt.subplot(1, 4, 1)
+        plt.title("Original")
+        plt.imshow(img, cmap='gray' if img.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.subplot(1, 4, 2)
+        plt.title("Downsampled")
+        plt.imshow(down_img, cmap='gray' if down_img.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.subplot(1, 4, 3)
+        plt.title("Upsampled")
+        plt.imshow(up_img, cmap='gray' if up_img.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.subplot(1, 4, 4)
+        plt.title("Postfiltered")
+        plt.imshow(postfiltered, cmap='gray' if postfiltered.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.tight_layout()
+        plt.show()
+
+    return down_img, up_img, postfiltered
 
 def codec(img: np.ndarray, kernel: np.ndarray, show=False):
     """Applies filtering, downsampling, and upsampling to the image."""
@@ -149,6 +249,69 @@ def codec(img: np.ndarray, kernel: np.ndarray, show=False):
         plt.show()
 
     return filtered, down_img, up_img
+
+def codec_postfiltering(img: np.ndarray, kernel: np.ndarray, show=False):
+    """Applies filtering, downsampling, and upsampling to the image."""
+    filtered = conv_filter(img, kernel)
+    down_img = downsample(filtered)
+    up_img = interpolation_upsample(down_img)
+    postfiltered = conv_filter(up_img, kernel)  # postfiltering
+    
+    # Normalize images to the correct range for visualization:
+    if img.dtype in [np.float32, np.float64]:
+        # Normalize to [0, 1] for floats
+        img = np.clip(img, 0, 1).astype(np.float32)
+        filtered = np.clip(filtered, 0, 1).astype(np.float32)
+        down_img = np.clip(down_img, 0, 1).astype(np.float32)
+        up_img = np.clip(up_img, 0, 1).astype(np.float32)
+        postfiltered = np.clip(postfiltered, 0, 1).astype(np.float32)
+    elif img.dtype == np.uint8:
+        # Stay in [0, 255] for uint8
+        img = np.clip(img, 0, 255).astype(np.uint8)
+        filtered = np.clip(filtered, 0, 255).astype(np.uint8)
+        down_img = np.clip(down_img, 0, 255).astype(np.uint8)
+        up_img = np.clip(up_img, 0, 255).astype(np.uint8)
+        postfiltered = np.clip(postfiltered, 0, 1).astype(np.float32)
+    else:
+        # Convert everything to float [0,1] just in case
+        img = np.clip(img / 255.0, 0, 1).astype(np.float32)
+        filtered = np.clip(filtered / 255.0, 0, 1).astype(np.float32)
+        down_img = np.clip(down_img / 255.0, 0, 1).astype(np.float32)
+        up_img = np.clip(up_img / 255.0, 0, 1).astype(np.float32)
+        postfiltered = np.clip(postfiltered, 0, 1).astype(np.float32)
+    
+    if show:
+        plt.figure(figsize=(18, 6))
+
+        plt.subplot(1, 5, 1)
+        plt.title("Original")
+        plt.imshow(img, cmap='gray' if img.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.subplot(1, 5, 2)
+        plt.title("Filtered")
+        plt.imshow(filtered, cmap='gray' if filtered.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.subplot(1, 5, 3)
+        plt.title("Downsampled")
+        plt.imshow(down_img, cmap='gray' if down_img.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.subplot(1, 5, 4)
+        plt.title("Upsampled")
+        plt.imshow(up_img, cmap='gray' if up_img.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.subplot(1, 5, 5)
+        plt.title("Postfiltered")
+        plt.imshow(postfiltered, cmap='gray' if postfiltered.ndim == 2 else None)
+        plt.axis('off')
+
+        plt.tight_layout()
+        plt.show()
+
+    return filtered, down_img, up_img, postfiltered
 
 def psnr_prefiltering(img:np.ndarray, kernel:np.ndarray):
     """Compares PSNR of images with and without prefiltering."""

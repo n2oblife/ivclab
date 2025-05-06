@@ -1,38 +1,39 @@
 import numpy as np
 from scipy.signal import convolve2d
 
-def downsample(image):
+def downsample(image, factor=2):
     """
     Selects only the even positioned pixels of an image
     to downsample it.
 
     image: np.array of shape [H, W, C]
+    factor: int sampling factor
 
     returns 
         downsampled_image: np.array of shape [H // 2, W // 2, C]
     """
     if image.ndim == 3:
-        return image[0::2, 0::2, :]
+        return image[0::factor, 0::factor, :]
     if image.ndim == 2:
-        return image[0::2, 0::2]
+        return image[0::factor, 0::factor]
 
-def upsample(image):
+def upsample(image, factor=2):
     """
     Upsamples an image by filling new pixels with zeroes.
 
     image: np.array of shape [H, W, C]
 
     returns 
-        upsampled_image: np.array of shape [H * 2, W * 2, C]
+        upsampled_image: np.array of shape [H * factor, W * factor, C]
     """
     if image.ndim == 3:
         H, W, C = image.shape
-        upsampled_image = np.zeros((2 * H, 2 * W, C), dtype=image.dtype)
-        upsampled_image[0::2, 0::2, :] = image
+        upsampled_image = np.zeros((factor * H, factor * W, C), dtype=image.dtype)
+        upsampled_image[0::factor, 0::factor, :] = image
     elif image.ndim == 2:
         H, W = image.shape
-        upsampled_image = np.zeros((2 * H, 2 * W), dtype=image.dtype)
-        upsampled_image[0::2, 0::2] = image
+        upsampled_image = np.zeros((factor * H, factor * W), dtype=image.dtype)
+        upsampled_image[0::factor, 0::factor] = image
     return upsampled_image
 
 def lowpass_filter(image, kernel):
