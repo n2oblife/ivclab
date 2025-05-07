@@ -130,4 +130,4 @@ if __name__ == "__main__":
         cond_entropy = stats_cond(image_gray, np.arange(256))
         cond_entropies[path] = cond_entropy
 
-        print(f"Conditional entropy for {path}: {entropy:.4f} bits")
+        print(f"Conditional entropy for {path}: {cond_entropies[path]:.4f} bits")
