@@ -31,18 +31,18 @@ for image_name in image_names:
     pmf_img = stats_marg(img, np.arange(256))
     all_pmfs[image_name] = pmf_img
 
-# common_pmf = (all_pmfs[0] + all_pmfs[1] + all_pmfs[2]) / 3
-common_pmf = np.mean([pmf for pmf in all_pmfs.values()])
+# common_pmf_ = (all_pmfs[0] + all_pmfs[1] + all_pmfs[2]) / 3
+common_pmf = np.mean(np.stack(list(all_pmfs.values())), axis=0)
 all_code_length = {}
 
-for image_name, target_pmf in zip(image_names, all_pmfs):
-    code_length = min_code_length(target_pmf, common_pmf)
+for image_name in image_names:
+    code_length = min_code_length(all_pmfs[image_name], common_pmf)
     all_code_length[image_name] = code_length
     print(f"Minimum average codeword length of {image_name} under common table: H={code_length:.2f} bits/pixel")
 
 all_diffs = {}
 print(f"The difference we are computing is the value : code_length - entropy")
-for image_name, code_length, entropy in zip(image_names, all_code_length, all_entropy):
-    diff = code_length - entropy
+for image_name in image_names:
+    diff = all_code_length[image_name] - all_entropy[image_name]
     all_diffs[image_name] = diff
     print(f"Difference between combined table and entropy of {image_name}: dH={diff:.2f} bits/pixel")

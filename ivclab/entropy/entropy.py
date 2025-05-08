@@ -86,9 +86,9 @@ if __name__ == "__main__":
     # Calculate PMFs and entropies for individual images
     for path in image_paths:
         image = imread(path)
-        image_gray = rgb2gray(image)
+        # image_gray = rgb2gray(image)
 
-        pmf = stats_marg(image_gray, np.arange(256))  # bins = 256, range = [0, 256]
+        pmf = stats_marg(image, np.arange(256))  # bins = 256, range = [0, 256]
         pmfs[path] = pmf
 
         entropy = calc_entropy(pmf)

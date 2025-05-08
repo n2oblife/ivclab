@@ -18,6 +18,7 @@ for image_name in image_names:
     all_pmfs.append(pmf_img)
 
 common_pmf = (all_pmfs[0] + all_pmfs[1] + all_pmfs[2]) / 3
+breakpoint()
 
 for image_name, target_pmf in zip(image_names, all_pmfs):
     code_length = min_code_length(target_pmf, common_pmf)

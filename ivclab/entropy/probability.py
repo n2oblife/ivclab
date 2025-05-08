@@ -161,10 +161,11 @@ def stats_joint(image, pixel_range, to_flat=False):
     pixel_pairs = rearrange(image, 'h (w s) c -> (h w c) s', s=2)
 
     # YOUR CODE STARTS HERE
+    hist_range = np.arange(pixel_range[-1]+2) #issue of range def
     hist2d, _, _ = np.histogram2d(
         pixel_pairs[:, 0],  # First pixel in pair
         pixel_pairs[:, 1],  # Second pixel in pair
-        bins=[pixel_range, pixel_range]
+        bins=[hist_range, hist_range]
     )
 
     count_table = hist2d / np.sum(hist2d)
@@ -219,8 +220,11 @@ if __name__ == "__main__":
     pmfs = {}
     for path in image_paths:
         image = imread(path)
-        image = rgb2gray(image)
-        pmfs[path] = stats_joint(image, np.arange(256))
+        # image = rgb2gray(image)
+        img_range = np.arange(256)
+        pmfs[path] = stats_joint(image, img_range)
+        joint_entropy = stats_cond(image, img_range)
+        print(f"Joint entropy of {path}: H={joint_entropy:.2f} bits/pixel pair")
         plot_image_and_joint_histogram(image, pmfs[path], path)
         
         # plot_histogram(path, grayscale=False)
