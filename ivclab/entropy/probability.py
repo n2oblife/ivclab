@@ -137,7 +137,7 @@ def plot_image_and_joint_histogram(image, joint_pmf, title, to_gray=False):
     plt.tight_layout()
     plt.show()
 
-def stats_joint(image, pixel_range, to_flat=False):
+def stats_joint(image, pixel_range, to_flat=True):
     """
     Computes joint probability of non-overlapping horizontal pixel pairs
     of an image, similar to stats_marg function. However, this
@@ -170,6 +170,7 @@ def stats_joint(image, pixel_range, to_flat=False):
 
     count_table = hist2d / np.sum(hist2d)
     pmf = count_table.flatten() if to_flat else count_table
+    breakpoint()
     # YOUR CODE ENDS HERE
     return pmf
 
