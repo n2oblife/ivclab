@@ -15,8 +15,7 @@ def plot_frequency_response(kernel: np.ndarray):
         kernel (np.ndarray): 2D filter kernel
     """
     # Zero-pad kernel to higher resolution for visualization
-    size = 256
-    padded = np.zeros((size, size))
+    padded = np.zeros(kernel.shape)
     kh, kw = kernel.shape
     padded[:kh, :kw] = kernel
 
@@ -347,7 +346,8 @@ if __name__ == "__main__":
          [2, 4, 2],
          [1, 2, 1]], dtype=float
     )
+    plot_frequency_response(low_pass_kernel)
     # Apply the codec function with the image and kernel
-    _,_ = psnr_prefiltering(gray_img, low_pass_kernel)
+    # _,_ = psnr_prefiltering(gray_img, low_pass_kernel)
     # filtered, down_img, up_img = codec(img, low_pass_kernel, show=True)
     # plot_differences(img, filtered, True)

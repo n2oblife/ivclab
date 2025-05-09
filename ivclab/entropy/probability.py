@@ -170,7 +170,6 @@ def stats_joint(image, pixel_range, to_flat=True):
 
     count_table = hist2d / np.sum(hist2d)
     pmf = count_table.flatten() if to_flat else count_table
-    breakpoint()
     # YOUR CODE ENDS HERE
     return pmf
 
