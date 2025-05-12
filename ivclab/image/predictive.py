@@ -24,8 +24,12 @@ def single_pixel_predictor(image):
     residual_image = np.zeros_like(image)
 
     # YOUR CODE STARTS HERE
-
-
+    channel = image.shape[2] if image.ndim == 3 else 1
+    for c in range(channel):
+        img_channel = image[:, :, c] if channel > 1 else image
+        prediction = img_channel[:, :-1] * a1
+        image_channel = img_channel[:, 1:]
+        residual_image = image_channel - prediction
     # YOUR CODE ENDS HERE
 
     residual_image = np.round(np.clip(residual_image, -255, 255))
@@ -65,18 +69,19 @@ def _predict_from_neighbors(original, coefficients):
     residual_error = np.copy(reconstruction)
 
     # YOUR CODE STARTS HERE
-    
-
-
-
-
-
-
-
-
-
+    for i in range(1, H):
+        for j in range(1, W):
+            for c in range(C):
+                top = reconstruction[i - 1, j, c]
+                left = reconstruction[i, j - 1, c]
+                top_left = reconstruction[i - 1, j - 1, c]
+                prediction = (coefficients[0] * left +
+                                coefficients[1] * top +
+                                coefficients[2] * top_left)
+                error = np.round(original[i, j, c] - prediction)
+                reconstruction[i, j, c] = prediction + error
+                residual_error[i, j, c] = error
     # YOUR CODE STARTS HERE
-
     return residual_error
 
 def three_pixels_predictor(image, subsample_color_channels=False):
@@ -103,23 +108,23 @@ def three_pixels_predictor(image, subsample_color_channels=False):
     coefficients_CbCr = [3/8, -2/8, 7/8]
 
     # YOUR CODE STARTS HERE
-    
 
+    ycbcr_image = rgb2ycbcr(image)
+    Y = ycbcr_image[:, :, 0:1]
+    CbCr = ycbcr_image[:, :, 1:3]
 
+    # Predict Y channel
+    residual_image_Y = _predict_from_neighbors(Y, coefficients_Y)
 
+    # Subsample and predict CbCr
+    if subsample_color_channels:
+        Cb = decimate(decimate(CbCr[:, :, 0], 2, axis=0), 2, axis=1)
+        Cr = decimate(decimate(CbCr[:, :, 1], 2, axis=0), 2, axis=1)
+        CbCr_sub = np.stack([Cb, Cr], axis=-1)
+        residual_image_CbCr = _predict_from_neighbors(CbCr_sub, coefficients_CbCr)
+    else:
+        residual_image_CbCr = _predict_from_neighbors(CbCr, coefficients_CbCr)
 
-
-
-
-
-
-
-
-
-
-
-
-    
     # YOUR CODE ENDS HERE
 
     residual_image_Y = np.round(np.clip(residual_image_Y, -255, 255)).astype(np.int32)
