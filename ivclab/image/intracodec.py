@@ -38,16 +38,7 @@ class IntraCodec:
             symbols: List of integers
         """
         # YOUR CODE STARTS HERE
-        
-
-
-
-
-
-
-
-
-
+        # raise NotImplementedError()
         # YOUR CODE ENDS HERE
         return symbols
     
@@ -67,15 +58,7 @@ class IntraCodec:
         """
         patch_shape = [original_shape[0] // 8, original_shape[1] // 8, original_shape[2]]
         # YOUR CODE STARTS HERE
-        
-
-
-
-
-
-
-
-
+        # raise NotImplementedError()
         # YOUR CODE ENDS HERE
         return reconstructed_img
     
@@ -90,13 +73,7 @@ class IntraCodec:
             Nothing
         """
         # YOUR CODE STARTS HERE
-        
-
-
-
-
-
-
+        # raise NotImplementedError()
         # YOUR CODE ENDS HERE
 
     def intra_encode(self, img: np.array, return_bpp = False, is_source_rgb=True):
@@ -110,13 +87,7 @@ class IntraCodec:
             bitstream: List of integers produced by the Huffman coder
         """
         # YOUR CODE STARTS HERE
-        
-
-
-
-
-
-
+        # raise NotImplementedError()
         # YOUR CODE ENDS HERE
         return bitstream
     
@@ -133,11 +104,7 @@ class IntraCodec:
 
         """
         # YOUR CODE STARTS HERE
-        
-
-
-
-
+        # raise NotImplementedError()
         # YOUR CODE ENDS HERE
         return reconstructed_img
     

@@ -20,10 +20,11 @@ class DiscreteCosineTransform:
         returns:
             transformed_img: np.array of shape [H_patch, W_patch, C, H_window, W_window]
         """
+        # Apply DCT along the last axis (W_window)
+        temp = dct(patched_img, axis=-1, norm=self.norm)
+        # Then apply DCT along the second last axis (H_window)
+        transformed = dct(temp, axis=-2, norm=self.norm)
 
-        # YOUR CODE STARTS HERE
-
-        # YOUR CODE ENDS HERE
         return transformed
     
     def inverse_transform(self, transformed: np.array):
@@ -37,7 +38,9 @@ class DiscreteCosineTransform:
         returns:
             patched_img: np.array of shape [H_patch, W_patch, C, H_window, W_window]
         """
-        # YOUR CODE STARTS HERE
+        # Apply IDCT along the last axis (W_window)
+        temp = idct(transformed, axis=-1, norm=self.norm)
+        # Then apply IDCT along the second last axis (H_window)
+        patched_img = idct(temp, axis=-2, norm=self.norm)
 
-        # YOUR CODE ENDS HERE
         return patched_img

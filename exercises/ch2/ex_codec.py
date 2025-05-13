@@ -7,8 +7,6 @@ from ivclab.utils.metrics import calc_psnr
 from ivclab.entropy import calc_entropy
 from ivclab.image.predictive import three_pixels_predictor
 
-
-
 if __name__ == "__main__":
     # Load image
     img_rgb = imread("data/lena_small.tif")

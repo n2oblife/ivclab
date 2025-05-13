@@ -23,17 +23,14 @@ def single_pixel_predictor(image):
     # Create residual image
     residual_image = np.zeros_like(image)
 
-    # YOUR CODE STARTS HERE
     channel = image.shape[2] if image.ndim == 3 else 1
     for c in range(channel):
         img_channel = image[:, :, c] if channel > 1 else image
         prediction = img_channel[:, :-1] * a1
         image_channel = img_channel[:, 1:]
         residual_image = image_channel - prediction
-    # YOUR CODE ENDS HERE
 
     residual_image = np.round(np.clip(residual_image, -255, 255))
-
     return residual_image
 
 def _predict_from_neighbors(original, coefficients):
@@ -70,7 +67,6 @@ def _predict_from_neighbors(original, coefficients):
 
     residual_error = np.zeros_like(reconstruction)
 
-    # YOUR CODE STARTS HERE
     for i in range(1, H):
         for j in range(1, W):
             for c in range(C):
@@ -89,7 +85,6 @@ def _predict_from_neighbors(original, coefficients):
 
                 residual_error[i, j, c] = error
                 reconstruction[i, j, c] = prediction + error  # Used in next steps
-    # YOUR CODE STARTS HERE
     return residual_error.squeeze()  # Return shape [H, W, C] or [H, W] if C==1
 
 def three_pixels_predictor(image, subsample_color_channels=False):
@@ -115,8 +110,6 @@ def three_pixels_predictor(image, subsample_color_channels=False):
     coefficients_Y = [7/8, -4/8, 5/8]
     coefficients_CbCr = [3/8, -2/8, 7/8]
 
-    # YOUR CODE STARTS HERE
-
     ycbcr_image = rgb2ycbcr(image)
     Y = ycbcr_image[:, :, 0:1]
     CbCr = ycbcr_image[:, :, 1:3]
@@ -132,8 +125,6 @@ def three_pixels_predictor(image, subsample_color_channels=False):
         residual_image_CbCr = _predict_from_neighbors(CbCr_sub, coefficients_CbCr)
     else:
         residual_image_CbCr = _predict_from_neighbors(CbCr, coefficients_CbCr)
-
-    # YOUR CODE ENDS HERE
 
     residual_image_Y = np.round(np.clip(residual_image_Y, -255, 255)).astype(np.int32)
     residual_image_CbCr = np.round(np.clip(residual_image_CbCr, -255, 255)).astype(np.int32)

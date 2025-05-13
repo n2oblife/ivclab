@@ -12,7 +12,6 @@ def calc_mse(orig: np.array, rec: np.array):
     returns 
         mse: a scalar value
     """
-    # YOUR CODE STARTS HERE
     # Convert grayscale to 3-channel if the other is RGB
     if orig.ndim == 2 and rec.ndim == 3:
         orig = np.stack([orig]*3, axis=-1)
@@ -21,7 +20,6 @@ def calc_mse(orig: np.array, rec: np.array):
     
     assert orig.shape == rec.shape, f"Image shapes don't match after processing: {orig.shape} vs {rec.shape}"
     mse = np.mean((orig.astype(np.float64) - rec.astype(np.float64)) ** 2)   
-    # YOUR CODE ENDS HERE
     return mse
 
 def calc_psnr(orig: np.array, rec:np.array, maxval=255):
@@ -38,7 +36,5 @@ def calc_psnr(orig: np.array, rec:np.array, maxval=255):
     returns 
         psnr: a scalar value
     """
-    # YOUR CODE STARTS HERE
     psnr = 20*np.log10(maxval / np.sqrt(calc_mse(orig, rec)))
-    # YOUR CODE ENDS HERE
     return psnr

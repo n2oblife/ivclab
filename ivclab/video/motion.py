@@ -21,24 +21,7 @@ class MotionCompensator:
             motion_vector: np.array of shape [H / 8, W / 8, 1]
         """
         # YOUR CODE STARTS HERE
-
-       
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        # raise NotImplementedError()
         # YOUR CODE ENDS HERE
 
         return motion_vector.astype(int)
@@ -59,6 +42,6 @@ class MotionCompensator:
         image = np.zeros_like(ref_image)
 
         # YOUR CODE STARTS HERE
-        raise NotImplementedError()
+        # raise NotImplementedError()
         # YOUR CODE ENDS HERE
         return image

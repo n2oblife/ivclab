@@ -53,13 +53,10 @@ class PatchQuant:
         returns:
             quantized_img: np.array of shape [H_patch, W_patch, C, H_window, W_window]
         """
-        # YOUR CODE STARTS HERE
         quant_table = self.get_quantization_table()  # [3, 8, 8]
         
         # Broadcasting division for quantization
         quantized_img = np.round(patched_img / quant_table[None, None, :, :, :])
-
-        # YOUR CODE ENDS HERE
         return quantized_img.astype(np.int32)
     
     def dequantize(self, quantized_img):
@@ -74,11 +71,8 @@ class PatchQuant:
         returns:
             patched_img: np.array of shape [H_patch, W_patch, C, H_window, W_window]
         """
-        # YOUR CODE STARTS HERE
         quant_table = self.get_quantization_table()  # [3, 8, 8]
 
         # Broadcasting multiplication for dequantization
         patched_img = quantized_img * quant_table[None, None, :, :, :]
-
-        # YOUR CODE ENDS HERE
         return patched_img.astype(np.int32)

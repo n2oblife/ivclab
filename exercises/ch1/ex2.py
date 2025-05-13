@@ -7,13 +7,9 @@ img_lena_compressed = imread('data/lena_compressed.tif')
 img_monarch = imread('data/monarch.tif')
 img_monarch_compressed = imread('data/monarch_compressed.tif')
 
-# YOUR CODE STARTS HERE
-
 # Compute the PSNR values for Lena and Monarch compression
 psnr_lena = calc_psnr(orig=img_lena, rec=img_lena_compressed)
 psnr_monarch = calc_psnr(orig=img_monarch, rec=img_monarch_compressed)
-
-# YOUR CODE ENDS HERE
 
 # print metrics
 print(f'PSNR of lena.tif is {psnr_lena:.3f} dB\n')

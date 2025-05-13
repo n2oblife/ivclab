@@ -22,7 +22,6 @@ def rgb2ycbcr(image: np.array):
         output_image: np.array of shape [H, W, 3]
     """
     output_image = np.zeros_like(image)
-    # YOUR CODE STARTS HERE
 
     # Define conversion matrix and offset for BT.601
     conversion_matrix = np.array([
@@ -35,8 +34,6 @@ def rgb2ycbcr(image: np.array):
 
     # Apply the transformation
     output_image = image @ conversion_matrix.T + offset
-
-    # YOUR CODE ENDS HERE
     return output_image
 
 def ycbcr2rgb(image: np.array):
@@ -49,7 +46,6 @@ def ycbcr2rgb(image: np.array):
         output_image: np.array of shape [H, W, 3]
     """
     output_image = np.zeros_like(image)
-    # YOUR CODE STARTS HERE
 
     # Separate Y, Cb, Cr channels
     Y = image[:, :, 0]
@@ -64,6 +60,4 @@ def ycbcr2rgb(image: np.array):
     # Stack and clip the result to valid RGB range
     output_image = np.stack([R, G, B], axis=-1)
     output_image = np.clip(output_image, 0, 255)
-
-    # YOUR CODE ENDS HERE
     return output_image

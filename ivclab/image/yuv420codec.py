@@ -57,8 +57,6 @@ def yuv420compression(image: np.ndarray):
     # Cast image to floating point
     image = image * 1.0
 
-    # YOUR CODE STARTS HERE
-
     # Step 1: Convert RGB to YCbCr
     ycbcr = rgb2ycbcr(image)
     Y = ycbcr[:, :, 0]
@@ -98,8 +96,6 @@ def yuv420compression(image: np.ndarray):
     ycbcr_out = np.stack([Y, Cb_final, Cr_final], axis=2)
     output = ycbcr2rgb(ycbcr_out)
     
-    #YOUR CODE ENDS HERE
-
     # Cast output to integer again
     output = np.round(output).astype(np.uint8)
     return output

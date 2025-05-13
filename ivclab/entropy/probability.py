@@ -160,7 +160,6 @@ def stats_joint(image, pixel_range, to_flat=True):
     # Get all non overlapping horizontal pixel pairs as an array of shape [N, 2]
     pixel_pairs = rearrange(image, 'h (w s) c -> (h w c) s', s=2)
 
-    # YOUR CODE STARTS HERE
     hist_range = np.arange(pixel_range[-1]+2) #issue of range def
     hist2d, _, _ = np.histogram2d(
         pixel_pairs[:, 0],  # First pixel in pair
@@ -170,7 +169,6 @@ def stats_joint(image, pixel_range, to_flat=True):
 
     count_table = hist2d / np.sum(hist2d)
     pmf = count_table.flatten() if to_flat else count_table
-    # YOUR CODE ENDS HERE
     return pmf
 
 def stats_cond(image, pixel_range, eps=1e-8, to_flat=False):
@@ -196,7 +194,6 @@ def stats_cond(image, pixel_range, eps=1e-8, to_flat=False):
     # Get all overlapping horizontal pixel pairs as an array of shape [N, 2]
     pixel_pairs = rearrange(sliding_window_view(image, 2, axis=1), 'h w c s-> (h w c) s', s=2) 
 
-    # YOUR CODE STARTS HERE
     hist2d, _, _ = np.histogram2d(
         pixel_pairs[:, 0],  # First pixel in pair
         pixel_pairs[:, 1],  # Second pixel in pair
@@ -212,7 +209,6 @@ def stats_cond(image, pixel_range, eps=1e-8, to_flat=False):
     p_x += eps
 
     cond_entropy = -np.sum(pmf * (np.log2(pmf) - np.log2(p_x[:, np.newaxis])))
-    # YOUR CODE ENDS HERE
     return cond_entropy
 
 if __name__ == "__main__":

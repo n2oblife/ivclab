@@ -21,13 +21,11 @@ def stats_marg(image, pixel_range):
     # Convert to float for safety (optional, since np.histogram works fine with uint8 too)
     image = image.astype(np.float64)
 
-    # YOUR CODE STARTS HERE
     flattened = image.flatten()
     counts, _ = np.histogram(flattened, bins=pixel_range)
 
     total_pixels = flattened.size # Normalize
     pmf = counts / total_pixels
-    # YOUR CODE ENDS HERE
     return pmf
 
 def calc_entropy(pmf, eps=1e-8):
@@ -43,11 +41,8 @@ def calc_entropy(pmf, eps=1e-8):
     # It's good practice to add small epsilon
     # to get rid of bins with zeroes before taking logarithm
     # pmf = pmf + eps
-    nonzero_pmf = pmf[pmf > 0]
-    
-    # YOUR CODE STARTS HERE
+    nonzero_pmf = pmf[pmf > 0]   
     entropy = -np.sum(nonzero_pmf * np.log2(nonzero_pmf))
-    # YOUR CODE ENDS HERE
     return entropy
 
 def min_code_length(target_pmf, common_pmf, eps=1e-8):
@@ -67,10 +62,7 @@ def min_code_length(target_pmf, common_pmf, eps=1e-8):
     # to get rid of bins with zeroes before taking logarithm
     common_pmf = common_pmf + eps
     # non_zero_common_pmf = common_pmf[common_pmf > 0]
-    
-    # YOUR CODE STARTS HERE
     code_length = -np.sum(target_pmf * np.log2(common_pmf))
-    # YOUR CODE ENDS HERE
     return code_length
 
 if __name__ == "__main__":

@@ -67,11 +67,8 @@ def lowpass_filter(image, kernel):
         filtered: np.array of shape [H, W, C]
     """
     filtered = np.zeros_like(image)
-
-    # YOUR CODE STARTS HERE
     kernel /= np.sum(kernel) # Normalize the kernel
     filtered = convolve2d(image, kernel, mode='same', boundary='symm')    
-    # YOUR CODE ENDS HERE
     return filtered
 
 class FilterPipeline:
@@ -98,9 +95,8 @@ class FilterPipeline:
         output = image * 1.0
 
         # YOUR CODE STARTS HERE
-
-
-        #YOUR CODE ENDS HERE
+        # raise NotImplementedError()
+        # YOUR CODE ENDS HERE
 
         # Cast output to integer again
         output = np.round(output).astype(np.uint8)

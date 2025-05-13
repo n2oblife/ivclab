@@ -31,28 +31,11 @@ class VideoCodec:
 
         self.decoder_recon = None
     
-    def encode_decode(self, frame, frame_num=0):
+    # def encode_decode(self, frame, frame_num=0):
 
-        if frame_num == 0:
-        # YOUR CODE STARTS HERE
-            pass
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # YOUR CODE ENDS HERE
-        bitsize = residual_bitsize + motion_bitsize
-        return self.decoder_recon, bitstream, bitsize
+    #     if frame_num == 0:
+    #     # YOUR CODE STARTS HERE
+    #     # raise NotImplementedError()
+    #     # YOUR CODE ENDS HERE
+    #     bitsize = residual_bitsize + motion_bitsize
+    #     return self.decoder_recon, bitstream, bitsize

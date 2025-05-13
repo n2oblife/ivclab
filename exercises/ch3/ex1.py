@@ -18,7 +18,7 @@ all_PSNRs = list()
 all_bpps = list()
 
 # YOUR CODE STARTS HERE
-
+# # raise NotImplementedError()
 # YOUR CODE ENDS HERE
 
 all_bpps = np.array(all_bpps)
