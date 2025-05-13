@@ -60,29 +60,37 @@ def _predict_from_neighbors(original, coefficients):
     returns 
         residual_error: np.array of shape [H, W, C]
     """
+    if original.ndim == 2:
+        original = original[:, :, np.newaxis]  # Convert to [H, W, 1]
     H, W, C = original.shape
 
     reconstruction = np.zeros_like(original)
     reconstruction[0,:,:] = original[0,:,:]
     reconstruction[:,0,:] = original[:,0,:]
 
-    residual_error = np.copy(reconstruction)
+    residual_error = np.zeros_like(reconstruction)
 
     # YOUR CODE STARTS HERE
     for i in range(1, H):
         for j in range(1, W):
             for c in range(C):
-                top = reconstruction[i - 1, j, c]
                 left = reconstruction[i, j - 1, c]
+                top = reconstruction[i - 1, j, c]
                 top_left = reconstruction[i - 1, j - 1, c]
-                prediction = (coefficients[0] * left +
-                                coefficients[1] * top +
-                                coefficients[2] * top_left)
-                error = np.round(original[i, j, c] - prediction)
-                reconstruction[i, j, c] = prediction + error
+
+                prediction = (
+                    coefficients[0] * left +
+                    coefficients[1] * top_left +
+                    coefficients[2] * top
+                )
+
+                actual = original[i, j, c]
+                error = np.round(actual - prediction)
+
                 residual_error[i, j, c] = error
+                reconstruction[i, j, c] = prediction + error  # Used in next steps
     # YOUR CODE STARTS HERE
-    return residual_error
+    return residual_error.squeeze()  # Return shape [H, W, C] or [H, W] if C==1
 
 def three_pixels_predictor(image, subsample_color_channels=False):
     """
