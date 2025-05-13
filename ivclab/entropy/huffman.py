@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import constriction
 
 class HuffmanCoder:
@@ -37,6 +38,15 @@ class HuffmanCoder:
             decoded.append(symbol + self.lower_bound)
         
         return np.asarray(decoded)
+    
+    def is_prefix_free(self):
+        codes = [self.encoder_codebook.get_code(i) for i in range(511)]
+        code_strs = [''.join(str(b) for b in code) for code in codes]
+        for i in range(len(code_strs)):
+            for j in range(len(code_strs)):
+                if i != j and code_strs[i].startswith(code_strs[j]):
+                    return False
+        return True
 
 if __name__ == '__main__':
     huffman = HuffmanCoder()

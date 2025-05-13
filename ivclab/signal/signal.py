@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.signal import convolve2d
+from scipy.ndimage import zoom
 
 def downsample(image, factor=2):
     """
@@ -35,6 +36,24 @@ def upsample(image, factor=2):
         upsampled_image = np.zeros((factor * H, factor * W), dtype=image.dtype)
         upsampled_image[0::factor, 0::factor] = image
     return upsampled_image
+
+def interpolation_upsample(image: np.ndarray, factor=2, classic=False) -> np.ndarray:
+    """
+    Upsamples an image by a factor using bilinear interpolation.
+    
+    Parameters:
+        image: np.ndarray of shape [H, W] or [H, W, C]
+    
+    Returns:
+        upsampled_image: np.ndarray of shape [2*H, 2*W] or [2*H, 2*W, C]
+    """
+    if image.ndim == 3:  # For color images (RGB)
+        return np.stack([
+            zoom(image[:, :, c], factor, order=1)  # order=1 -> bilinear interpolation
+            for c in range(image.shape[2])
+        ], axis=2) if not classic else upsample(image)
+    else:  # Grayscale
+        return zoom(image, factor, order=1)
 
 def lowpass_filter(image, kernel):
     """
