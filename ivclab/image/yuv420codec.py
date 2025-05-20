@@ -110,8 +110,8 @@ if __name__ == "__main__":
     reconstructed2 = yuv420compression(img2)
 
     # Compute PSNR
-    psnr1 = calc_psnr(img1, reconstructed1, maxval=255)
-    psnr2 = calc_psnr(img2, reconstructed2, maxval=255)
+    psnr1 = calc_psnr(img1, reconstructed1, maxval=255, channel=3)
+    psnr2 = calc_psnr(img2, reconstructed2, maxval=255, channel=3)
 
     # Show results
     print(f"PSNR for 'sail.tif': {psnr1:.2f} dB")
