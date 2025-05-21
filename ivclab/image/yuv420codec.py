@@ -36,6 +36,66 @@ def crop_image(img, pad=4):
 
 def yuv420compression(image: np.ndarray):
     """
+    Performs YUV420 compression by subsampling the chroma components (Cb and Cr)
+    using decimate (downsampling with filtering), and reconstructs using resample
+    (upsampling with interpolation). Edge padding is used to avoid border artifacts.
+
+    Parameters:
+        image (np.ndarray): Input RGB image of shape [H, W, 3]
+
+    Returns:
+        np.ndarray: Output RGB image of shape [H, W, 3] after YUV420 compression and reconstruction.
+    """
+    image = image.astype(np.float32)
+
+    # Step 1: Convert RGB to YCbCr
+    ycbcr = rgb2ycbcr(image)
+    Y  = ycbcr[:, :, 0]
+    Cb = ycbcr[:, :, 1]
+    Cr = ycbcr[:, :, 2]
+
+    # Step 2A: Symmetric padding for chroma
+    pad = 4
+    Cb_padded = pad_image(Cb, pad)
+    Cr_padded = pad_image(Cr, pad)
+
+    # Step 2B: Downsample chroma using decimate (vertical then horizontal)
+    Cb_ds = decimate(Cb_padded, 2, axis=0, ftype='fir', zero_phase=True)
+    Cb_ds = decimate(Cb_ds, 2, axis=1, ftype='fir', zero_phase=True)
+
+    Cr_ds = decimate(Cr_padded, 2, axis=0, ftype='fir', zero_phase=True)
+    Cr_ds = decimate(Cr_ds, 2, axis=1, ftype='fir', zero_phase=True)
+
+    # Step 2C: No change to Y; padding was never applied
+
+    # Step 3: Round all components
+    Y     = np.round(Y)
+    Cb_ds = np.round(Cb_ds)
+    Cr_ds = np.round(Cr_ds)
+
+    # Step 4A: Symmetric padding of downsampled chroma before upsampling
+    Cb_ds_pad = pad_image(Cb_ds, pad)
+    Cr_ds_pad = pad_image(Cr_ds, pad)
+
+    # Step 4B: Upsample back to padded original shape
+    Cb_us = resample(Cb_ds_pad, Cb_padded.shape[0], axis=0)
+    Cb_us = resample(Cb_us, Cb_padded.shape[1], axis=1)
+
+    Cr_us = resample(Cr_ds_pad, Cr_padded.shape[0], axis=0)
+    Cr_us = resample(Cr_us, Cr_padded.shape[1], axis=1)
+
+    # Step 4C: Crop back to match original size
+    Cb_final = crop_image(Cb_us, pad)
+    Cr_final = crop_image(Cr_us, pad)
+
+    # Step 5: Stack and convert back to RGB
+    ycbcr_rec = np.stack([Y, Cb_final, Cr_final], axis=2)
+    rgb_out = ycbcr2rgb(ycbcr_rec)
+
+    return np.clip(np.round(rgb_out), 0, 255).astype(np.uint8)
+
+def yuv420compression_old(image: np.ndarray):
+    """
     Steps:
     1. Convert an image from RGB to YCbCr
     2. Compress the image
@@ -110,8 +170,8 @@ if __name__ == "__main__":
     reconstructed2 = yuv420compression(img2)
 
     # Compute PSNR
-    psnr1 = calc_psnr(img1, reconstructed1, maxval=255, channel=3)
-    psnr2 = calc_psnr(img2, reconstructed2, maxval=255, channel=3)
+    psnr1 = calc_psnr(img1, reconstructed1, maxval=255)
+    psnr2 = calc_psnr(img2, reconstructed2, maxval=255)
 
     # Show results
     print(f"PSNR for 'sail.tif': {psnr1:.2f} dB")

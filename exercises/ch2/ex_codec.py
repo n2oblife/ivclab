@@ -67,12 +67,15 @@ if __name__ == "__main__":
 
     # Compute metrics
     psnr = calc_psnr(img_rgb, img_rgb_rec)
-    entropy = calc_entropy(all_residuals_concat)
+    entropy = calc_entropy(img_rgb_rec)
     bpp = total_bits / (img_rgb.shape[0] * img_rgb.shape[1]) #TODO issue of bpp
-
+    original_bits = img_rgb.size * 8  # Total pixels * 8 bits per channel
+    compression_ratio = original_bits / total_bits
+    
     print(f"PSNR: {psnr:.2f} dB")
     print(f"Bits per pixel (Huffman stream): {bpp:.3f}")
     print(f"Estimated entropy (after reconstruction): {entropy:.3f} bits/pixel")
+    print(f"Compression Ratio: {compression_ratio:.2f}:1")
 
     # Optional: Show original and reconstructed
     plt.subplot(1, 2, 1)

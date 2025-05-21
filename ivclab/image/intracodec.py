@@ -5,6 +5,7 @@ from ivclab.utils import ZigZag, Patcher
 from ivclab.signal import DiscreteCosineTransform
 from ivclab.entropy import HuffmanCoder, stats_marg
 from ivclab.signal import rgb2ycbcr, ycbcr2rgb
+from einops import rearrange
 
 class IntraCodec:
 
@@ -37,9 +38,16 @@ class IntraCodec:
         returns:
             symbols: List of integers
         """
-        # YOUR CODE STARTS HERE
-        # raise NotImplementedError()
-        # YOUR CODE ENDS HERE
+
+        # Convert RGB to YCbCr if needed
+        img_ycbcr = rgb2ycbcr(img) if is_source_rgb else img
+        patches = rearrange(img_ycbcr, '(h ph) (w pw) c -> h w c ph pw', ph=self.block_shape[0], pw=self.block_shape[1])
+        
+        dct_patches = self.dct.transform(patches)
+        quantized = self.quant.quantize(dct_patches)
+        zz_scanned = self.zigzag.flatten(quantized)
+        symbols = self.zerorun.encode(zz_scanned)
+
         return symbols
     
     def symbols2image(self, symbols, original_shape):
@@ -57,9 +65,13 @@ class IntraCodec:
             reconstructed_img: np.array of shape [H, W, C]
         """
         patch_shape = [original_shape[0] // 8, original_shape[1] // 8, original_shape[2]]
-        # YOUR CODE STARTS HERE
-        # raise NotImplementedError()
-        # YOUR CODE ENDS HERE
+
+        decoded = self.zerorun.decode(symbols, original_shape=patch_shape)
+        inv_zz = self.zigzag.unflatten(decoded)
+        dequant = self.quant.dequantize(inv_zz)
+        ycbcr = self.dct.inverse_transform(dequant)
+        reconstructed_img = ycbcr2rgb(ycbcr)
+
         return reconstructed_img
     
     def train_huffman_from_image(self, training_img, is_source_rgb=True):
@@ -72,9 +84,11 @@ class IntraCodec:
         returns:
             Nothing
         """
-        # YOUR CODE STARTS HERE
-        # raise NotImplementedError()
-        # YOUR CODE ENDS HERE
+        # Convert RGB to YCbCr if needed
+        img_ycbcr = rgb2ycbcr(training_img) if is_source_rgb else training_img
+        pmf = stats_marg(img_ycbcr, pixel_range=np.arange(self.bounds[0], self.bounds[1]))
+        self.huffman.train(pmf)
+        return None
 
     def intra_encode(self, img: np.array, return_bpp = False, is_source_rgb=True):
         """
@@ -86,9 +100,8 @@ class IntraCodec:
         returns:
             bitstream: List of integers produced by the Huffman coder
         """
-        # YOUR CODE STARTS HERE
-        # raise NotImplementedError()
-        # YOUR CODE ENDS HERE
+        symbols = self.image2symbols(img, is_source_rgb)
+        bitstream, _ = self.huffman.encode(symbols) 
         return bitstream
     
     def intra_decode(self, bitstream, original_shape):
@@ -103,9 +116,9 @@ class IntraCodec:
             reconstructed_img: np.array of shape [H, W, C]
 
         """
-        # YOUR CODE STARTS HERE
         # raise NotImplementedError()
-        # YOUR CODE ENDS HERE
+        decoded = self.huffman.decode(bitstream, len(bitstream))
+        reconstructed_img = self.symbols2image(decoded, original_shape)
         return reconstructed_img
     
 if __name__ == "__main__":
