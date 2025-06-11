@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.signal import convolve2d
 from scipy.ndimage import zoom
+from scipy.signal import decimate, resample
 
 def downsample(image, factor=2):
     """
@@ -81,23 +82,47 @@ class FilterPipeline:
         """
         self.kernel = kernel / np.sum(kernel)
 
-    def filter_img(self, image: np.ndarray, prefilter: bool=True):
-        """
-        Applies prefiltering to an image (optional), downsamples, 
-        upsamples and filters the output with a lowpass filter. 
+def filter_img(self, image: np.ndarray, prefilter: bool = True):
+    """
+    Applies prefiltering to an image (optional), downsamples, 
+    upsamples and filters the output with a lowpass filter. 
 
-        image: np.array of shape [H, W, C]
+    image: np.array of shape [H, W, C]
 
-        returns 
-            output_image: np.array of shape [H, W, C]
-        """
-        # Cast image to floating point
-        output = image * 1.0
+    returns 
+        output_image: np.array of shape [H, W, C]
+    """
+    # Cast image to float
+    output = image * 1.0
+    H, W, C = output.shape
 
-        # YOUR CODE STARTS HERE
-        # raise NotImplementedError()
-        # YOUR CODE ENDS HERE
+    # Optional: Apply prefiltering (simple 3x3 averaging filter)
+    if prefilter:
+        kernel = np.array([[1, 2, 1],
+                           [2, 4, 2],
+                           [1, 2, 1]], dtype=np.float64)
+        kernel /= np.sum(kernel)
+        for c in range(C):
+            output[:, :, c] = convolve2d(output[:, :, c], kernel, mode='same', boundary='symm')
 
-        # Cast output to integer again
-        output = np.round(output).astype(np.uint8)
-        return output
+    # Downsample by 2 in both dimensions
+    for c in range(C):
+        # Use zero-phase filtering
+        output[:, :, c] = decimate(decimate(output[:, :, c], 2, axis=0, ftype='fir', zero_phase=True), 2, axis=1, ftype='fir', zero_phase=True)
+
+    # Upsample back to original shape
+    for c in range(C):
+        # First upsample rows, then columns
+        output[:, :, c] = resample(resample(output[:, :, c], H, axis=0), W, axis=1)
+
+    # Optional: Apply post-filtering (lowpass)
+    post_filter = np.array([[1, 1, 1],
+                            [1, 2, 1],
+                            [1, 1, 1]], dtype=np.float64)
+    post_filter /= np.sum(post_filter)
+    for c in range(C):
+        output[:, :, c] = convolve2d(output[:, :, c], post_filter, mode='same', boundary='symm')
+
+    # Cast output back to uint8
+    output = np.round(output).astype(np.uint8)
+    return output
