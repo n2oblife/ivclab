@@ -85,8 +85,8 @@ class IntraCodec:
             Nothing
         """
         # Convert RGB to YCbCr if needed
-        img_ycbcr = rgb2ycbcr(training_img) if is_source_rgb else training_img
-        pmf = stats_marg(img_ycbcr, pixel_range=np.arange(self.bounds[0], self.bounds[1]))
+        img_symbols = rgb2ycbcr(training_img) if is_source_rgb else self.image2symbols(training_img, is_source_rgb)
+        pmf = stats_marg(img_symbols, pixel_range=np.arange(self.bounds[0], self.bounds[1]))
         self.huffman.train(pmf)
         return None
 

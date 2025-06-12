@@ -18,7 +18,29 @@ all_PSNRs = list()
 all_bpps = list()
 
 # YOUR CODE STARTS HERE
-# # raise NotImplementedError()
+quantization_scales = [0.05, 0.1, 0.15, 0.2, 0.3]
+
+for q in quantization_scales:
+    intracodec = IntraCodec(quantization_scale=q)
+    intracodec.train_huffman_from_image(lena_small, is_source_rgb=False)
+
+    # Encode image
+    bitstream = intracodec.intra_encode(lena, return_bpp=False)
+    # Compute bitsize (length of bitstream in bits)
+    bitsize = len(bitstream)
+
+    # Decode image
+    reconstructed_img = intracodec.intra_decode(bitstream, lena.shape)
+
+    # Calculate PSNR
+    psnr = calc_psnr(lena, reconstructed_img)
+    all_PSNRs.append(psnr)
+
+    # Calculate bitrate in bits per pixel
+    bpp = bitsize / (H * W)
+    all_bpps.append(bpp)
+
+    print(f"Quant Scale: {q} | PSNR: {psnr:.2f} dB | bpp: {bpp:.4f}")
 # YOUR CODE ENDS HERE
 
 all_bpps = np.array(all_bpps)
