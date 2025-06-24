@@ -43,7 +43,6 @@ def pad_image(img: np.ndarray, resolution: str = "high") -> np.ndarray:
     pad = 4 if resolution == "high" else 2
     return np.pad(img, ((pad, pad), (pad, pad)), mode='symmetric')
 
-
 def crop_image(img: np.ndarray, resolution: str = "high") -> np.ndarray:
     """
     Crops the image symmetrically.
@@ -58,7 +57,6 @@ def crop_image(img: np.ndarray, resolution: str = "high") -> np.ndarray:
     """
     pad = 4 if resolution == "high" else 2
     return img[pad:-pad, pad:-pad]
-
 
 def yuv420compression(image: np.ndarray):
     """
@@ -80,10 +78,10 @@ def yuv420compression(image: np.ndarray):
     Cb = ycbcr[:, :, 1]
     Cr = ycbcr[:, :, 2]
 
-    # Step 2A: Symmetric padding for chroma
-    pad = 4
-    Cb_padded = pad_image(Cb, pad)
-    Cr_padded = pad_image(Cr, pad)
+    # Step 2: Compression - Downsample chroma channels only
+    # Step 2A: Symmetric padding for chroma channels
+    Cb_padded = pad_image(Cb, "high")
+    Cr_padded = pad_image(Cr, "high")
 
     # Step 2B: Downsample chroma using decimate (vertical then horizontal)
     Cb_ds = decimate(Cb_padded, 2, axis=0, ftype='fir', zero_phase=True)
@@ -92,16 +90,15 @@ def yuv420compression(image: np.ndarray):
     Cr_ds = decimate(Cr_padded, 2, axis=0, ftype='fir', zero_phase=True)
     Cr_ds = decimate(Cr_ds, 2, axis=1, ftype='fir', zero_phase=True)
 
-    # Step 2C: No change to Y; padding was never applied
-
-    # Step 3: Round all components
-    Y     = np.round(Y)
+    # Step 3: Round all components (Y stays unchanged, just rounded)
+    Y = np.round(Y)
     Cb_ds = np.round(Cb_ds)
     Cr_ds = np.round(Cr_ds)
 
+    # Step 4: Decompression - Upsample chroma channels back
     # Step 4A: Symmetric padding of downsampled chroma before upsampling
-    Cb_ds_pad = pad_image(Cb_ds, pad)
-    Cr_ds_pad = pad_image(Cr_ds, pad)
+    Cb_ds_pad = pad_image(Cb_ds, "low")  # Use "low" for downsampled images
+    Cr_ds_pad = pad_image(Cr_ds, "low")
 
     # Step 4B: Upsample back to padded original shape
     Cb_us = resample(Cb_ds_pad, Cb_padded.shape[0], axis=0)
@@ -111,80 +108,14 @@ def yuv420compression(image: np.ndarray):
     Cr_us = resample(Cr_us, Cr_padded.shape[1], axis=1)
 
     # Step 4C: Crop back to match original size
-    Cb_final = crop_image(Cb_us, pad)
-    Cr_final = crop_image(Cr_us, pad)
+    Cb_final = crop_image(Cb_us, "high")
+    Cr_final = crop_image(Cr_us, "high")
 
     # Step 5: Stack and convert back to RGB
     ycbcr_rec = np.stack([Y, Cb_final, Cr_final], axis=2)
     rgb_out = ycbcr2rgb(ycbcr_rec)
 
     return np.clip(np.round(rgb_out), 0, 255).astype(np.uint8)
-
-def yuv420compression_old(image: np.ndarray):
-    """
-    Steps:
-    1. Convert an image from RGB to YCbCr
-    2. Compress the image
-        A. Pad the image with 4 pixels symmetric pixels on each side
-        B. Downsample only Cb and Cr channels with prefiltering (use scipy.signal.decimate for it)
-        C. Crop the image 2 pixels from each side to get rid of padding
-    3. Apply rounding to Y, Cb and Cr channels
-    4. Decompress the image
-        A. Pad the image with 4 pixels symmetric pixels on each side
-        B. Upsample Cb and Cr channels (use scipy.signal.resample for it)
-        C. Crop the image 2 pixels from each side to get rid of padding
-    5. Convert the YCbCr image back to RGB
-
-    image: np.array of shape [H, W, C]
-
-    returns 
-        output_image: np.array of shape [H, W, C]
-    """
-    # Cast image to floating point
-    image = image * 1.0
-    resolution = "high" if (image.shape[0] > 512) else "normal"
-
-    # Step 1: Convert RGB to YCbCr
-    ycbcr = rgb2ycbcr(image)
-    Y = ycbcr[:, :, 0]
-    Cb = ycbcr[:, :, 1]
-    Cr = ycbcr[:, :, 2]
-
-    # Step 2A: Symmetric padding
-    Cb_padded = pad_image(Cb, resolution)
-    Cr_padded = pad_image(Cr, resolution)
-
-    # Step 2B: Downsample using decimate (factor 2 in both dimensions)
-    Cb_ds = decimate(decimate(Cb_padded, 2, axis=0, ftype='fir', zero_phase=True), 2, axis=1, ftype='fir', zero_phase=True)
-    Cr_ds = decimate(decimate(Cr_padded, 2, axis=0, ftype='fir', zero_phase=True), 2, axis=1, ftype='fir', zero_phase=True)
-
-    # Step 2C: Crop back Y (no padding for Y)
-    Y = crop_image(pad_image(Y, resolution), resolution)
-
-    # Step 3: Round and store
-    Y = np.round(Y)
-    Cb_ds = np.round(Cb_ds)
-    Cr_ds = np.round(Cr_ds)
-
-    # Step 4A: Symmetric padding before upsampling
-    Cb_ds_pad = pad_image(Cb_ds, resolution)
-    Cr_ds_pad = pad_image(Cr_ds, resolution)
-
-    # Step 4B: Upsample back to original shape using resample
-    Cb_us = resample(resample(Cb_ds_pad, Cb_padded.shape[0], axis=0), Cb_padded.shape[1], axis=1)
-    Cr_us = resample(resample(Cr_ds_pad, Cr_padded.shape[0], axis=0), Cr_padded.shape[1], axis=1)
-
-    # Step 4C: Crop padded upsampled result to match original size
-    Cb_final = crop_image(Cb_us, resolution)
-    Cr_final = crop_image(Cr_us, resolution)
-
-    # Step 5: Combine and convert back to RGB
-    ycbcr_out = np.stack([Y, Cb_final, Cr_final], axis=2)
-    output = ycbcr2rgb(ycbcr_out)
-    
-    # Cast output to integer again
-    output = np.round(output).astype(np.uint8)
-    return output
 
 if __name__ == "__main__":
     # Load images
@@ -212,7 +143,7 @@ if __name__ == "__main__":
     axes[1, 0].imshow(img2.astype(np.uint8))
     axes[1, 0].set_title("Original lena.tif")
     axes[1, 1].imshow(reconstructed2)
-    axes[1, 1].set_title(f"Reconstructed lena.tif\nPSNR: {psnr2:.2f} dB")
+    axes[1, 1].set_title(f"Reconstructed lena.tif\nPSNr: {psnr2:.2f} dB")
     for ax in axes.ravel(): ax.axis('off')
     plt.tight_layout()
     plt.show()
