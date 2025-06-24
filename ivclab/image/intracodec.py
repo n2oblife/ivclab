@@ -3,7 +3,7 @@ from ivclab.entropy import ZeroRunCoder
 from ivclab.quantization import PatchQuant
 from ivclab.utils import ZigZag, Patcher
 from ivclab.signal import DiscreteCosineTransform
-from ivclab.entropy import HuffmanCoder, stats_marg
+from ivclab.entropy import HuffmanCoder, stats_marg, smooth_pmf
 from ivclab.signal import rgb2ycbcr, ycbcr2rgb
 from einops import rearrange
 
@@ -17,7 +17,7 @@ class IntraCodec:
                  ):
         
         self.quantization_scale = quantization_scale
-        self.bounds = bounds
+        self.bounds = None
         self.end_of_block = end_of_block
         self.block_shape = block_shape
 
@@ -25,7 +25,7 @@ class IntraCodec:
         self.quant = PatchQuant(quantization_scale=quantization_scale)
         self.zigzag = ZigZag()
         self.zerorun = ZeroRunCoder(end_of_block=end_of_block, block_size= block_shape[0] * block_shape[1])
-        self.huffman = HuffmanCoder(lower_bound=bounds[0])
+        self.huffman = None
         self.patcher = Patcher()
 
     def image2symbols(self, img: np.array, is_source_rgb=True):
@@ -86,7 +86,10 @@ class IntraCodec:
         """
         # Convert RGB to YCbCr if needed
         img_symbols = rgb2ycbcr(training_img) if is_source_rgb else self.image2symbols(training_img, is_source_rgb)
+        self.bounds = (img_symbols.min(), img_symbols.max()+1) # still innit
         pmf = stats_marg(img_symbols, pixel_range=np.arange(self.bounds[0], self.bounds[1]))
+        pmf = smooth_pmf(pmf)
+        self.huffman = HuffmanCoder(lower_bound=self.bounds[0]) # still innit
         self.huffman.train(pmf)
         return None
 
@@ -123,7 +126,6 @@ class IntraCodec:
     
 if __name__ == "__main__":
     from ivclab.utils import imread,calc_psnr
-    import matplotlib.pyplot as plt
 
     lena = imread(f'data/lena.tif')
     lena_small = imread(f'data/lena_small.tif')

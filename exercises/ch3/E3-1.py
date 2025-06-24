@@ -11,7 +11,7 @@ from einops import rearrange
 
 if __name__ == "__main__":
     # Load RGB image
-    img_rgb = imread("data/lena_small.tif")
+    img_rgb = imread("data/lena.tif")
 
     # Convert RGB to YCbCr
     img_ycbcr = rgb2ycbcr(img_rgb)
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     plt.subplot(1, 2, 1)
     plt.imshow(img_rgb)
-    plt.title("Original Image")
+    plt.title("lena Image")
     plt.axis("off")
 
     # Show quantized Y channel as encoded "visual"

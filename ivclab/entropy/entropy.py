@@ -28,6 +28,12 @@ def stats_marg(image, pixel_range):
     pmf = counts / total_pixels
     return pmf
 
+def smooth_pmf(pmf, epsilon=1e-9):
+    # Add small value to avoid zero-probability entries
+    pmf = pmf + epsilon
+    pmf /= pmf.sum()  # Re-normalize
+    return pmf
+
 def calc_entropy(pmf, eps=1e-8):
     """
     Computes entropy for the given probability mass function
