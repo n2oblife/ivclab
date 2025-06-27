@@ -68,28 +68,54 @@ class ZeroRunCoder:
         h, w, c = original_shape
         flat_img = []
         i = 0
+        expected_blocks = h * w * c
 
-        while i < len(encoded):
+        while i < len(encoded) and len(flat_img) < expected_blocks:
             block = []
             while len(block) < self.block_size:
+                if i >= len(encoded):
+                    raise ValueError("Unexpected end of encoded symbols during block reconstruction.")
+
                 symbol = encoded[i]
                 if symbol == self.EOB:
-                    # Fill remaining with zeros
                     block.extend([0] * (self.block_size - len(block)))
                     i += 1
                     break
                 elif symbol == 0:
+                    if i + 1 >= len(encoded):
+                        raise ValueError("Run-length zero symbol without a following count.")
                     run_len = encoded[i + 1]
+                    if len(block) + run_len > self.block_size:
+                        raise ValueError(f"Zero run overflows block: block size {self.block_size}, run_len {run_len}")
                     block.extend([0] * run_len)
                     i += 2
                 else:
                     block.append(symbol)
                     i += 1
+
+            # Check block size again
+            if len(block) != self.block_size:
+                raise ValueError(f"Decoded block has invalid length: {len(block)} (expected {self.block_size})")
+
+            # Only append if we've collected a full block
             flat_img.append(block)
 
         flat_img = np.array(flat_img, dtype=np.int32)
+        # sanity check
+        expected_blocks = h * w * c
+        actual_blocks = flat_img.shape[0]
+
+        if expected_blocks != actual_blocks:
+            raise ValueError(f"Mismatch in number of blocks: expected {expected_blocks}, got {actual_blocks}")
+
+        # if flat_img.shape[0] > expected_blocks:
+        #     flat_img = flat_img[:expected_blocks]
+        # elif flat_img.shape[0] < expected_blocks:
+        #     raise ValueError("Too few blocks recovered in ZeroRun decoding")
+
         flat_patch_img = rearrange(flat_img, '(h w c) p -> h w c p',
-                                   h=h, w=w, c=c, p=self.block_size)
+                                h=h, w=w, c=c, p=self.block_size)
+
         return flat_patch_img
 
             

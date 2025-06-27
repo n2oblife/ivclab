@@ -70,8 +70,8 @@ class IntraCodec:
         inv_zz = self.zigzag.unflatten(decoded)
         dequant = self.quant.dequantize(inv_zz)
         ycbcr = self.dct.inverse_transform(dequant)
+        ycbcr = rearrange(ycbcr, 'hp wp c h w -> (hp h) (wp w) c')
         reconstructed_img = ycbcr2rgb(ycbcr)
-
         return reconstructed_img
     
     def train_huffman_from_image(self, training_img, is_source_rgb=True):
@@ -85,8 +85,13 @@ class IntraCodec:
             Nothing
         """
         # Convert RGB to YCbCr if needed
-        img_symbols = rgb2ycbcr(training_img) if is_source_rgb else self.image2symbols(training_img, is_source_rgb)
-        self.bounds = (img_symbols.min(), img_symbols.max()+1) # still innit
+        img_symbols = self.image2symbols(training_img, is_source_rgb)
+        img_symbols = np.array(img_symbols, dtype=np.int32)  # Ensure consistent type
+
+        safety_margin = 20
+        self.bounds = (int(img_symbols.min()) - safety_margin, 
+                    int(img_symbols.max()) + safety_margin + 1)        
+        
         pmf = stats_marg(img_symbols, pixel_range=np.arange(self.bounds[0], self.bounds[1]))
         pmf = smooth_pmf(pmf)
         self.huffman = HuffmanCoder(lower_bound=self.bounds[0]) # still innit
@@ -104,8 +109,15 @@ class IntraCodec:
             bitstream: List of integers produced by the Huffman coder
         """
         symbols = self.image2symbols(img, is_source_rgb)
-        bitstream, _ = self.huffman.encode(symbols) 
-        return bitstream
+        bitstream, bitsize = self.huffman.encode(symbols)
+        self.num_symbols = len(symbols)
+
+        if return_bpp:
+            total_pixels = img.shape[0] * img.shape[1]
+            bpp = bitsize / total_pixels
+            return bitstream, bpp
+        else:
+            return bitstream, None
     
     def intra_decode(self, bitstream, original_shape):
         """
@@ -119,21 +131,49 @@ class IntraCodec:
             reconstructed_img: np.array of shape [H, W, C]
 
         """
-        # raise NotImplementedError()
-        decoded = self.huffman.decode(bitstream, len(bitstream))
+        if not hasattr(self, 'num_symbols'):
+            raise RuntimeError("No symbol count found. Make sure to encode first or store symbol count.")
+        
+        # Use the stored number of symbols instead of bitstream length
+        decoded = self.huffman.decode(bitstream, self.num_symbols)
         reconstructed_img = self.symbols2image(decoded, original_shape)
         return reconstructed_img
     
 if __name__ == "__main__":
-    from ivclab.utils import imread,calc_psnr
+    from ivclab.utils import imread, calc_psnr
+    import matplotlib.pyplot as plt
+    import numpy as np
 
     lena = imread(f'data/lena.tif')
     lena_small = imread(f'data/lena_small.tif')
-    intracodec = IntraCodec(quantization_scale=0.15)
-    intracodec.train_huffman_from_image(lena_small)
-    symbols, bitsize = intracodec.intra_encode(lena, return_bpp=True)
-    print(len(symbols))
-    reconstructed_img = intracodec.intra_decode(symbols, lena.shape)
-    psnr = calc_psnr(lena, reconstructed_img)
-    print(f"PSNR: {psnr:.4f} dB, bpp: {bitsize / (lena.size / 3)}")
     
+    # Use the fixed version
+    intracodec = IntraCodec(quantization_scale=0.15)
+    intracodec.train_huffman_from_image(lena)
+    
+    bitstream, bpp = intracodec.intra_encode(lena, return_bpp=True)
+    print(f"Bitstream length: {len(bitstream)}")
+    print(f"Original symbol count: {intracodec.num_symbols}")
+    
+    reconstructed_img = intracodec.intra_decode(bitstream, lena.shape)
+    psnr = calc_psnr(lena, reconstructed_img)
+    print(f"PSNR: {psnr:.4f} dB, bpp: {bpp / (lena.size / 3)}")
+
+    # ---------------------
+    # Plot original vs reconstructed
+    # ---------------------
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    plt.title("Original Image")
+    plt.imshow(np.clip(lena.astype(np.uint8), 0, 255))
+    plt.axis('off')
+
+    plt.subplot(1, 2, 2)
+    plt.title(f"Reconstructed Image\nPSNR: {psnr:.2f} dB")
+    plt.imshow(np.clip(reconstructed_img.astype(np.uint8), 0, 255))
+    plt.axis('off')
+
+    plt.tight_layout()
+    plt.show()
+
