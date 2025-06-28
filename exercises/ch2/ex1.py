@@ -6,7 +6,7 @@ import numpy as np
 # For this exercise, you need to implement 
 # stats_marg and calc_entropy functions in
 # ivclab.entropy.entropy file. You can run
-# ch2 tests to make sure they are implemented
+# ch2 tests to make sure they are 
 # correctly and you get sensible results
 
 image_names = ['lena.tif', 'sail.tif', 'smandril.tif']

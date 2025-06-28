@@ -11,7 +11,7 @@ from einops import rearrange
 
 if __name__ == "__main__":
     # Load RGB image
-    img_rgb = imread("data/lena.tif")
+    img_rgb = imread("data/lena_small.tif")
 
     # Convert RGB to YCbCr
     img_ycbcr = rgb2ycbcr(img_rgb)
@@ -41,17 +41,21 @@ if __name__ == "__main__":
     zr = ZeroRunCoder()
     encoded_zr = zr.encode(zz_scanned)
 
-    # 5. Huffman coding
-    min_val = np.min(encoded_zr)
-    max_val = np.max(encoded_zr)
-    hist_range = max_val - min_val + 1
-    histogram = np.zeros(hist_range, dtype=np.int32)
-    for symbol in encoded_zr:
-        histogram[symbol - min_val] += 1
-    pmf = histogram / np.sum(histogram)
-    huffman = HuffmanCoder(lower_bound=min_val)
+    # 5. Huffman coding (fully robust)
+    symbols, counts = np.unique(encoded_zr, return_counts=True)
+    pmf = counts / np.sum(counts)
+
+    # Map original symbols to indices (0-based)
+    symbol_to_index = {s: i for i, s in enumerate(symbols)}
+    indexed_encoded_zr = np.array([symbol_to_index[s] for s in encoded_zr], dtype=np.int32)
+
+    # Train Huffman
+    huffman = HuffmanCoder(lower_bound=0)  # Since we mapped to 0-based indices
     huffman.train(pmf.astype(np.float32))
-    huff_encoded, _ = huffman.encode(encoded_zr)
+
+    # Encode
+    huff_encoded, bitstring = huffman.encode(indexed_encoded_zr)
+
 
     print(f"Image processed and Huffman table built.")
     print(f"Number of symbols encoded: {len(encoded_zr)}")

@@ -54,18 +54,15 @@ class IntraCodec:
         """
         Reconstructs the original image from the symbol representation
         by applying ZeroRunDecoding, Inverse ZigZag, Dequantization and 
-        IDCT, ycbcr2rgb in order. The argument original_shape is required to compute 
-        patch_shape, which is needed by ZeroRunDecoding to correctly 
-        reshape the input image from blocks.
+        IDCT, ycbcr2rgb in order.
 
         symbols: List of integers
         original_shape: List of 3 elements that contains H, W and C
-        
+
         returns:
             reconstructed_img: np.array of shape [H, W, C]
         """
         patch_shape = [original_shape[0] // 8, original_shape[1] // 8, original_shape[2]]
-
         decoded = self.zerorun.decode(symbols, original_shape=patch_shape)
         inv_zz = self.zigzag.unflatten(decoded)
         dequant = self.quant.dequantize(inv_zz)
@@ -73,6 +70,7 @@ class IntraCodec:
         ycbcr = rearrange(ycbcr, 'hp wp c h w -> (hp h) (wp w) c')
         reconstructed_img = ycbcr2rgb(ycbcr)
         return reconstructed_img
+
     
     def train_huffman_from_image(self, training_img, is_source_rgb=True):
         """
@@ -147,7 +145,6 @@ if __name__ == "__main__":
     lena = imread(f'data/lena.tif')
     lena_small = imread(f'data/lena_small.tif')
     
-    # Use the fixed version
     intracodec = IntraCodec(quantization_scale=0.15)
     intracodec.train_huffman_from_image(lena)
     
