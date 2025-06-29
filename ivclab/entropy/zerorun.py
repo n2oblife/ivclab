@@ -11,7 +11,9 @@ class ZeroRunCoder:
         """
         Encode each (64,) block independently to avoid stream desyncs.
         """
+        print(f"🔍 DEBUG: ZeroRunCoder.encode - Input shape: {flat_patch_img.shape}")
         flat_img = rearrange(flat_patch_img, 'h w c p -> (h w c) p')
+        print(f"🔍 DEBUG: ZeroRunCoder.encode - After rearrange: {flat_img.shape}")
         encoded = []
         for block in flat_img:
             last_nonzero = self.block_size - 1
@@ -34,7 +36,9 @@ class ZeroRunCoder:
                     encoded.append(int(val))
                     i += 1
             encoded.append(self.EOB)
-        return np.array(encoded, dtype=np.int32)
+        result = np.array(encoded, dtype=np.int32)
+        print(f"🔍 DEBUG: ZeroRunCoder.encode - Output symbols: {len(result)}")
+        return result
 
     
     def decode(self, encoded, original_shape):
@@ -49,10 +53,12 @@ class ZeroRunCoder:
             flat_patch_img: np.array of shape [H_patch, W_patch, C, Block_size]
         
         """
+        print(f"🔍 DEBUG: ZeroRunCoder.decode - Input symbols: {len(encoded)}, Original shape: {original_shape}")
         h, w, c = original_shape
         flat_img = []
         i = 0
         expected_blocks = h * w * c
+        print(f"🔍 DEBUG: ZeroRunCoder.decode - Expected blocks: {expected_blocks}")
         while i < len(encoded) and len(flat_img) < expected_blocks:
             block = []
             while True:
@@ -77,4 +83,6 @@ class ZeroRunCoder:
         if len(flat_img) != expected_blocks:
             raise ValueError(f"Expected {expected_blocks} blocks, got {len(flat_img)}")
         flat_img = np.array(flat_img, dtype=np.int32)
-        return rearrange(flat_img, '(h w c) p -> h w c p', h=h, w=w, c=c, p=self.block_size)    
+        result = rearrange(flat_img, '(h w c) p -> h w c p', h=h, w=w, c=c, p=self.block_size)
+        print(f"🔍 DEBUG: ZeroRunCoder.decode - Output shape: {result.shape}")
+        return result    
