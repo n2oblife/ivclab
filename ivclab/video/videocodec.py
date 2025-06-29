@@ -31,7 +31,7 @@ class VideoCodec:
 
         self.decoder_recon = None
     
-    def encode_decode(self, frame, frame_num=0):
+    def encode_decode(self, frame, frame_num=0, is_source_rgb=False):
         # Explanation:
         # For frame 0: pure intra coding using your IntraCodec.
 
@@ -52,7 +52,7 @@ class VideoCodec:
 
         if frame_num == 0:
             # Intra-frame coding (I-frame)
-            recon_y, bitstream, residual_bitsize = self.intra_codec.encode_decode(y_channel)
+            recon_y, bitstream, residual_bitsize = self.intra_codec.encode_decode(y_channel, is_source_rgb=is_source_rgb)
             motion_bitsize = 0
             self.decoder_recon = recon_y
         else:
@@ -72,7 +72,7 @@ class VideoCodec:
             residual = y_channel - prediction
 
             # Encode residual
-            recon_residual, bitstream, residual_bitsize = self.residual_codec.encode_decode(residual)
+            recon_residual, bitstream, residual_bitsize = self.residual_codec.encode_decode(residual, is_source_rgb=is_source_rgb)
 
             # Reconstruct current frame from prediction + residual
             recon_y = prediction + recon_residual

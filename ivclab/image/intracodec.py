@@ -137,6 +137,36 @@ class IntraCodec:
         reconstructed_img = self.symbols2image(decoded, original_shape)
         return reconstructed_img
     
+    def encode_decode(self, img: np.array, return_bpp=False, is_source_rgb=True):
+        """
+        Encodes and then decodes an image using Huffman coding and quantization.
+
+        img: np.array of shape [H, W, C]
+        return_bpp: whether to return bits-per-pixel
+        is_source_rgb: whether the input image is in RGB (converted to YCbCr)
+
+        returns:
+            reconstructed_img: np.array of shape [H, W, C]
+            bitstream: List of integers produced by the Huffman coder
+            bitsize: total number of bits used
+        """
+        # Encode image to bitstream
+        symbols = self.image2symbols(img, is_source_rgb)
+        bitstream, bitsize = self.huffman.encode(symbols)
+        self.num_symbols = len(symbols)
+
+        # Decode bitstream to image
+        decoded = self.huffman.decode(bitstream, self.num_symbols)
+        reconstructed_img = self.symbols2image(decoded, img.shape)
+
+        if return_bpp:
+            total_pixels = img.shape[0] * img.shape[1]
+            bpp = bitsize / total_pixels
+            return reconstructed_img, bitstream, bitsize, bpp
+        else:
+            return reconstructed_img, bitstream, bitsize
+            
+    
 if __name__ == "__main__":
     from ivclab.utils import imread, calc_psnr
     import matplotlib.pyplot as plt
